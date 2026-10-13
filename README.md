@@ -42,6 +42,7 @@ engineering. The full application source is private and available to reviewers o
 | **AI Compliance Check** | Reads the customer's website the way a carrier reviewer does and returns a graded report with exact fixes, before they file and pay a vetting fee. |
 | **Prepaid wallet** | Stripe top-ups, a transparent rate card with carrier fees passed through at cost, an append-only ledger, spend limits, low-balance alerts, exports. |
 | **Carrier lookup** | Line type, carrier and deliverability for one number or a CSV of thousands, with free credits on every account. |
+| **Smart Replies** | An optional AI add-on that drafts inbox replies and, when enabled, answers routine texts on its own: confidence-gated, silent while a person is active in the thread, hands off on request, disclosed once per conversation. |
 | **Agencies** | Sub-accounts, role-based team access, branded transactional email. |
 
 **What developers can do** — a full REST API: account-scoped keys with `read` / `write`
@@ -149,7 +150,18 @@ attempt, and refused at registration if they point at a private or loopback addr
 **Signup abuse defences.** A honeypot, an HMAC-signed minimum-time token, per-IP limits,
 disposable-domain and MX checks, optional Cloudflare Turnstile, and IP intelligence recorded
 on the account for the human approval step. Network checks fail open so a slow third party
-never blocks a real customer; the cheap checks fail closed.
+never blocks a real customer; the cheap checks fail closed. The invite-only tester programme
+goes one step further with **double opt-in**: an application holds no spot until its emailed
+link is clicked, so a flood of form posts cannot move the capped counter; unconfirmed rows
+are pruned after a week, and a blocked bot sees the ordinary success screen with nothing
+stored and no email sent.
+
+**AI on a short leash.** The Smart Replies add-on never gets the keys. The model sees only
+the thread, the account's own knowledge base and templates, must return a structured
+decision, and may send only above a confidence threshold. Hand-off words, a human-active
+window, daily caps, after-hours rules and keyword messages short-circuit before any model
+call. Every automated send passes the same gate and ledger as a human one, and the add-on
+pauses itself when the wallet cannot cover its renewal.
 
 ```php
 // Signed "form rendered at" token: a submission younger than a few seconds is a bot.
@@ -164,9 +176,9 @@ $token = $at.'.'.substr(hash_hmac('sha256', (string) $at, $appKey), 0, 20);
 - **Data:** MySQL 8, Redis (cache, sessions, queue) with Horizon
 - **Carrier:** Twilio (messaging, Lookup v2, 10DLC and toll-free registration APIs)
 - **Payments and mail:** Stripe Checkout, Mailgun with branded Markdown templates
-- **AI:** Anthropic Claude for the optional website review, behind a contract with a Fake
+- **AI:** Anthropic Claude for the optional website review and the Smart Replies add-on, each behind a contract with a Fake
 - **Frontend:** Blade + Tailwind CSS v4 + inline Lucide icons, built with Vite; no SPA framework
-- **Testing:** Pest feature suite (212 tests) running entirely on the Fake providers
+- **Testing:** Pest feature suite (251 tests) running entirely on the Fake providers
 
 ---
 
