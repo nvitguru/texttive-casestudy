@@ -128,7 +128,7 @@ Only figures that can be read back from the system are listed here.
 | **Two-way inbox** | Conversations per number, contacts and lists with CSV import, templates with merge fields, scheduled sends, throttled bulk campaigns. |
 | **Compliance built in** | STOP / START / HELP handled automatically, an opt-out list that is never deleted, TCPA quiet hours in the account's timezone, and guided 10DLC or toll-free registration filed with the carrier registry on the customer's behalf. |
 | **AI Compliance Check** | Reads the customer's website the way a carrier reviewer does and returns a graded report with exact fixes, before they file and pay a vetting fee. |
-| **Prepaid wallet** | Stripe top-ups, a transparent rate card with carrier fees passed through at cost, an append-only ledger, spend limits, low-balance alerts, exports. |
+| **Prepaid wallet** | Stripe top-ups, a transparent rate card with number and registration fees listed separately, an append-only ledger, spend limits, low-balance alerts, exports. |
 | **Carrier lookup** | Line type, carrier and deliverability for one number or a CSV of thousands, with free credits on every account. |
 | **Smart Replies** | An optional AI add-on that drafts inbox replies and, when enabled, answers routine texts on its own: confidence-gated, silent while a person is active in the thread, hands off on request, disclosed once per conversation. |
 | **Agencies** | Sub-accounts, role-based team access, branded transactional email. |
