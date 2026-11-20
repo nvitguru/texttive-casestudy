@@ -98,7 +98,7 @@ flowchart TD
 
 Only figures that can be read back from the system are listed here.
 
-- **Tests.** 11 Smart Replies tests and 14 AI Compliance Check tests inside a 260-test suite, all run against the Fake
+- **Tests.** 11 Smart Replies tests and 14 AI Compliance Check tests inside a suite of nearly 300 tests, all run against the Fake
   driver. They prove, among other things, that drafts never send, that an automated answer carries the disclosure
   once and is charged once, that keywords, automation off and the daily cap keep the assistant silent, that asking for
   a person hands off exactly once and alerts the owner, that after-hours acknowledgements make no model call, and that
@@ -125,8 +125,10 @@ Only figures that can be read back from the system are listed here.
 | | |
 |---|---|
 | **Numbers they own** | Search by area code, buy local (10DLC) or toll-free numbers, release any time. Each renews monthly from the wallet. |
-| **Two-way inbox** | Conversations per number, contacts and lists with CSV import, templates with merge fields, scheduled sends, throttled bulk campaigns. |
-| **Compliance built in** | STOP / START / HELP handled automatically, an opt-out list that is never deleted, TCPA quiet hours in the account's timezone, and guided 10DLC or toll-free registration filed with the carrier registry on the customer's behalf. |
+| **Two-way inbox** | Conversations per number, contacts and lists with CSV import, templates, scheduled sends. |
+| **Bulk sends** | One message to all contacts or a list, sent as individual texts with each person's name filled in (`{{first_name}}`, any imported column, with fallbacks such as `{{first_name\|there}}`). A preview shows the first real messages, the recipient count and the exact cost before anything goes out; sends can be scheduled, paused, resumed or cancelled, and opted-out people are always left out. |
+| **Sending levels** | Every account has a daily message limit that is earned, not bought: new accounts start at 250 a day and move up to 1,000, 2,500 and 5,000 as they build a clean sending history. Level, today's use and progress to the next level are on the dashboard. |
+| **Compliance built in** | STOP / START / HELP handled automatically (and a request to stop in the person's own words, such as "stop texting me", opts them out too), an opt-out list that is never deleted, TCPA quiet hours in the account's timezone, and guided 10DLC or toll-free registration filed with the carrier registry on the customer's behalf. |
 | **AI Compliance Check** | Reads the customer's website the way a carrier reviewer does and returns a graded report with exact fixes, before they file and pay a vetting fee. |
 | **Prepaid wallet** | Stripe top-ups, a transparent rate card with number and registration fees listed separately, an append-only ledger, spend limits, low-balance alerts, exports. |
 | **Carrier lookup** | Line type, carrier and deliverability for one number or a CSV of thousands, with free credits on every account. |
@@ -196,6 +198,7 @@ account active & sending enabled
 → recipient not opted out
 → destination country allowed
 → quiet hours (TCPA, account timezone)
+→ daily message limit (the account's sending level)
 → wallet covers the estimated price (segments × rate)
 → daily spend limit
 ```
@@ -249,6 +252,25 @@ stored and no email sent.
 $token = $at.'.'.substr(hash_hmac('sha256', (string) $at, $appKey), 0, 20);
 ```
 
+**Trust that is earned, not bought.** Bulk sending is only safe if a brand-new account cannot send thousands of
+unwanted texts on day one and get the shared numbers filtered by carriers, so the two shipped together. Each account
+family has a sending level with a daily limit, counted in the account's own timezone across every way a message can
+leave (portal, API, inbox replies, bulk sends, automatic replies) and enforced inside the same send gate, so nothing
+routes around it. A daily sweep promotes an account only when it has aged from its *first delivered message* (an idle
+account earns nothing), has delivered on enough different days (one big day earns nothing), and keeps a clean record:
+a spam score of 2% or less over its whole history and the last 30 days, healthy delivery, and no recent quality pause.
+Levels are never lowered automatically, and limits above the top level are set per account after a human review. A
+separate circuit breaker watches each account's last 24 hours; an unusual spike in opt-outs, complaints or
+carrier-filtered messages switches sending off for the whole account family, pauses its running bulk sends and emails
+the owner, before a carrier blocks the number for good.
+
+**Opt-outs in plain words, deliberately narrow.** Carriers only act on exact keywords like STOP, so every other
+inbound reply is classified for two things: a request to stop in the person's own words (honoured exactly like STOP)
+and a complaint (counted against the sender's spam score, without opting the person out). The patterns are kept
+narrow on purpose, because a false opt-out silences a business's real customer; an ordinary "who is this?" is not
+counted. A spam score cannot be cleaned up by hand: opt-outs an account enters itself are not counted, and removing
+one keeps the record.
+
 **AI on a short leash.** Covered in full in [The AI layer](#the-ai-layer) above: structured outputs, a
 confidence gate, hand-off to a person, the same send gate and ledger as a human send, and per-call token logging.
 
@@ -262,7 +284,7 @@ confidence gate, hand-off to a person, the same send gate and ledger as a human 
 - **Payments and mail:** Stripe Checkout, Mailgun with branded Markdown templates
 - **AI:** Anthropic Claude via the official PHP SDK with JSON-schema structured outputs: Haiku 4.5 (drafts), Sonnet 5 (automated answers, knowledge-base distillation), Opus 5 (compliance review); each behind a contract with a Fake
 - **Frontend:** Blade + Tailwind CSS v4 + inline Lucide icons, built with Vite; no SPA framework
-- **Testing:** Pest feature suite (251 tests) running entirely on the Fake providers
+- **Testing:** Pest feature suite (nearly 300 tests) running entirely on the Fake providers
 
 ---
 
